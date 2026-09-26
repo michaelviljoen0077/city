@@ -16,7 +16,7 @@ class Dashboard:
         self.font = pygame.font.SysFont("consolas", 16)
         self.small_font = pygame.font.SysFont("consolas", 13)
 
-    def draw(self, metrics, clock, training_info=None):
+    def draw(self, metrics, clock, lights_mode="Fixed timer", training_info=None):
         panel_w = Config.WINDOW_WIDTH // 4
         panel_x = Config.WINDOW_WIDTH - panel_w
         panel_rect = pygame.Rect(panel_x, 0, panel_w, Config.WINDOW_HEIGHT)
@@ -34,6 +34,7 @@ class Dashboard:
         y = self._label_value(x, y, "Time", f"{clock.elapsed:.1f}s")
         y = self._label_value(x, y, "Speed", f"{clock.speed_multiplier:.0f}x")
         y = self._label_value(x, y, "Paused", "Yes" if clock.paused else "No")
+        y = self._label_value(x, y, "Lights", lights_mode)
         y += 10
 
         y = self._header(x, y, "TRAFFIC")
@@ -67,6 +68,7 @@ class Dashboard:
             ("1/2/3", "Speed 1x/3x/10x"),
             ("S", "Save brain"),
             ("L", "Load brain"),
+            ("F", "Fixed timers"),
             ("N", "Next generation"),
         ]
         for key, desc in controls:

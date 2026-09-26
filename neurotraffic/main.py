@@ -34,6 +34,7 @@ class App:
         self.training_mode = False
         self._training_eval_index = 0
         self._training_sim_time = 0.0
+        self._sim_accumulator = 0.0
 
         self.running = True
 
@@ -44,15 +45,16 @@ class App:
 
             if dt > 0:
                 if self.training_mode:
-                    self._training_step(dt)
+                    self._training_step()
                 else:
-                    self.world.update(dt)
+                    self._free_run_step(dt)
 
             self.renderer.draw(self.world)
             self.debug_overlay.draw(self.world)
             self.dashboard.draw(
                 self.world.metrics,
                 self.clock,
+                lights_mode=self._lights_mode(),
                 training_info=self._get_training_info() if self.training_mode else None,
             )
             pygame.display.flip()
@@ -89,6 +91,8 @@ class App:
             self._save_brain()
         elif key == pygame.K_l:
             self._load_brain()
+        elif key == pygame.K_f:
+            self._use_fixed_timers()
         elif key == pygame.K_n:
             if self.training_mode:
                 self._force_next_generation()
@@ -98,9 +102,13 @@ class App:
             # Restart the current evaluation from scratch
             self._start_training_eval(self._training_eval_index)
         else:
-            self.world.reset()
-            self.clock.reset()
-            self.world.clear_brains()
+            # Keep whatever controls the lights (fixed timer or loaded brain)
+            self._reset_world()
+
+    def _reset_world(self):
+        self.world.reset()
+        self.clock.reset()
+        self._sim_accumulator = 0.0
 
     def _toggle_training(self):
         self.training_mode = not self.training_mode
@@ -109,25 +117,29 @@ class App:
             self._start_training_eval(0)
         else:
             self.world.clear_brains()
-            self.world.reset()
-            self.clock.reset()
+            self._reset_world()
 
     def _start_training_eval(self, index):
         """Start evaluating brain at index in the population."""
         self._training_eval_index = index
-        self.world.reset()
-        self.clock.reset()
+        self._reset_world()
         brain = self.trainer.get_brain(index)
         self.world.set_brain_for_all_lights(brain)
         self._training_sim_time = 0.0
 
-    def _training_step(self, dt):
+    def _free_run_step(self, dt):
+        # Advance in fixed steps so higher speeds don't make cars jump
+        # through each other; leftover time carries to the next frame.
+        self._sim_accumulator += dt
+        while self._sim_accumulator >= Config.SIM_TIMESTEP:
+            self.world.update(Config.SIM_TIMESTEP)
+            self._sim_accumulator -= Config.SIM_TIMESTEP
+
+    def _training_step(self):
         # Run many sim ticks per rendered frame for fast training
-        fixed_dt = 1.0 / 60.0
-        steps = Config.TRAINING_STEPS_PER_FRAME
-        for _ in range(steps):
-            self.world.update(fixed_dt)
-            self._training_sim_time += fixed_dt
+        for _ in range(Config.TRAINING_STEPS_PER_FRAME):
+            self.world.update(Config.SIM_TIMESTEP)
+            self._training_sim_time += Config.SIM_TIMESTEP
 
             if self._training_sim_time >= Config.TRAINING_SIM_DURATION:
                 self.world.finalize_metrics()
@@ -165,12 +177,30 @@ class App:
             print("No best brain to save yet.")
 
     def _load_brain(self):
-        brain = ModelStore.load_best()
+        if self.training_mode:
+            print("Leave training mode (T) before loading a brain.")
+            return
+        try:
+            brain = ModelStore.load_best()
+        except ValueError as e:
+            print(f"Could not load brain: {e}")
+            return
         if brain:
             self.world.set_brain_for_all_lights(brain)
+            self._reset_world()
             print("Brain loaded.")
         else:
             print("No saved brain found.")
+
+    def _use_fixed_timers(self):
+        if self.training_mode:
+            return
+        self.world.clear_brains()
+        self._reset_world()
+
+    def _lights_mode(self):
+        lights = self.world.city_map.get_traffic_lights()
+        return "Neural" if lights and lights[0].brain is not None else "Fixed timer"
 
     def _get_training_info(self):
         return {

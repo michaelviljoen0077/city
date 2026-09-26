@@ -67,14 +67,18 @@ class Renderer:
             r = 5
 
             # North/South indicators
-            ns_color = Config.COLOR_GREEN if tl.is_green_for("N") else Config.COLOR_RED
+            ns_color = self._signal_color(tl.state_for("N"))
             pygame.draw.circle(self.surface, ns_color, (x, y - offset), r)
             pygame.draw.circle(self.surface, ns_color, (x, y + offset), r)
 
             # East/West indicators
-            ew_color = Config.COLOR_GREEN if tl.is_green_for("E") else Config.COLOR_RED
+            ew_color = self._signal_color(tl.state_for("E"))
             pygame.draw.circle(self.surface, ew_color, (x - offset, y), r)
             pygame.draw.circle(self.surface, ew_color, (x + offset, y), r)
+
+    @staticmethod
+    def _signal_color(state):
+        return {"green": Config.COLOR_GREEN, "yellow": Config.COLOR_YELLOW}.get(state, Config.COLOR_RED)
 
     def _draw_vehicles(self, world):
         for vehicle in world.vehicles:

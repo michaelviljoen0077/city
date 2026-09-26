@@ -89,16 +89,11 @@ class Car(Vehicle):
 
     def _light_state_ahead(self, world, road):
         """State of the light at the end of this road for our approach:
-        'green' (or no light), 'yellow' (all-red clearance), or 'red'."""
+        'green' (or no light), 'yellow' (clearing after our green), or 'red'."""
         inter = world.city_map.intersections.get(road.end_node.id)
         if inter is None or inter.traffic_light is None:
             return "green"
-        tl = inter.traffic_light
-        if tl.is_green_for(road.direction):
-            return "green"
-        if "ALL_RED" in tl.phase:
-            return "yellow"
-        return "red"
+        return inter.traffic_light.state_for(road.direction)
 
     def _distance_to_car_ahead(self):
         """Center-to-center distance to the nearest car ahead, looking through

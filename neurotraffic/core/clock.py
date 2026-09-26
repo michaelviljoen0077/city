@@ -2,6 +2,8 @@
 
 import pygame
 
+from neurotraffic.core.config import Config
+
 
 class SimClock:
     def __init__(self, fps=60):
@@ -12,7 +14,7 @@ class SimClock:
         self.elapsed = 0.0  # total simulation time
 
     def tick(self):
-        raw_dt = self.clock.tick(self.fps) / 1000.0
+        raw_dt = min(self.clock.tick(self.fps) / 1000.0, Config.MAX_FRAME_TIME)
         if self.paused:
             return 0.0
         dt = raw_dt * self.speed_multiplier

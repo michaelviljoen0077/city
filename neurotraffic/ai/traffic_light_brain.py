@@ -14,9 +14,3 @@ class TrafficLightBrain(NeuralBrain):
             Config.BRAIN_HIDDEN_2,
             Config.BRAIN_OUTPUTS,
         ])
-
-    def copy(self):
-        new = TrafficLightBrain()
-        new.weights = [w.copy() for w in self.weights]
-        new.biases = [b.copy() for b in self.biases]
-        return new

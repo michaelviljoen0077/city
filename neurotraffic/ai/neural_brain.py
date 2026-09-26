@@ -1,5 +1,7 @@
 """Simple feedforward neural network implemented with NumPy."""
 
+import copy
+
 import numpy as np
 from neurotraffic.ai.brain import Brain
 from neurotraffic.core.config import Config
@@ -46,7 +48,9 @@ class NeuralBrain(Brain):
             self.biases[i] += mask_b * noise_b
 
     def copy(self):
-        new = NeuralBrain(self.layer_sizes)
+        # Shallow-copy keeps the subclass; then give the clone its own arrays
+        new = copy.copy(self)
+        new.layer_sizes = list(self.layer_sizes)
         new.weights = [w.copy() for w in self.weights]
         new.biases = [b.copy() for b in self.biases]
         return new
@@ -59,8 +63,15 @@ class NeuralBrain(Brain):
             flat.extend(b.flatten().tolist())
         return flat
 
+    def weight_count(self):
+        return sum(w.size + b.size for w, b in zip(self.weights, self.biases))
+
     def set_weights(self, flat_weights):
         """Restore weights and biases from a flat list."""
+        if len(flat_weights) != self.weight_count():
+            raise ValueError(
+                f"expected {self.weight_count()} weights for layers "
+                f"{self.layer_sizes}, got {len(flat_weights)}")
         idx = 0
         for i in range(len(self.weights)):
             w_size = self.weights[i].size

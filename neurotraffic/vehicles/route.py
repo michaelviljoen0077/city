@@ -29,7 +29,3 @@ class Route:
     @property
     def finished(self):
         return self.current_index >= len(self.road_segments)
-
-    @property
-    def remaining(self):
-        return len(self.road_segments) - self.current_index
