@@ -14,12 +14,28 @@ A top-down traffic simulator where neural networks learn to control traffic ligh
 
 ## Quick Start
 
+Requires Python 3.9+.
+
 ```bash
-cd "python projects/city"
 python -m venv .venv
-.venv\Scripts\activate
-pip install pygame numpy
-python -m neurotraffic.main
+# Windows:      .venv\Scripts\activate
+# macOS/Linux:  source .venv/bin/activate
+pip install -e ".[dev]"      # or: pip install -r requirements.txt
+python -m neurotraffic.main  # or just: neurotraffic
+```
+
+### Headless training
+
+Train without opening a window (much faster), then load the result in the app with **L**:
+
+```bash
+python -m neurotraffic.train --generations 20 --save   # --seed N for reproducible runs
+```
+
+### Tests
+
+```bash
+pytest
 ```
 
 ## Controls
@@ -36,6 +52,7 @@ python -m neurotraffic.main
 | 3 | Speed 10× |
 | S | Save best brain |
 | L | Load best brain |
+| F | Back to fixed-timer lights |
 | N | Next generation (training) |
 | Esc | Quit |
 
@@ -44,6 +61,7 @@ python -m neurotraffic.main
 ```
 neurotraffic/
   main.py              # Entry point & Pygame loop
+  train.py             # Headless training CLI
   core/                # Simulation engine, config, clock
   world/               # Road network graph, intersections, traffic lights
   vehicles/            # Cars, pathfinding, routes
@@ -52,6 +70,7 @@ neurotraffic/
   rendering/           # Pygame drawing, dashboard, debug overlay
   persistence/         # Save/load models and experiments
   data/                # Configs, saved models, experiment logs
+tests/                 # pytest suite
 ```
 
 ## Training

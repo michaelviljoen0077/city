@@ -4,8 +4,7 @@ import json
 import os
 from datetime import datetime
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-EXPERIMENTS_DIR = os.path.join(DATA_DIR, "experiments")
+from neurotraffic.persistence.paths import EXPERIMENTS_DIR
 
 
 class ExperimentLogger:

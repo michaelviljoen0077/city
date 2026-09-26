@@ -33,8 +33,8 @@ class Config:
     MAX_ACTIVE_CARS = 100
 
     # Simulation
-    SIMULATION_DURATION = 300.0  # seconds for free-run mode
-    SPEED_MULTIPLIER = 1.0
+    SIM_TIMESTEP = 1.0 / 60.0  # fixed physics step; faster speeds run more steps
+    MAX_FRAME_TIME = 0.1  # clamp long frames (e.g. window dragged) to avoid a jump
 
     # Training
     TRAINING_SIM_DURATION = 120.0  # shorter sim for faster training

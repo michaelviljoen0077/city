@@ -17,33 +17,21 @@ class Intersection:
                 return road
         return None
 
-    def get_outgoing_by_direction(self, direction):
-        """Get outgoing road toward given direction."""
-        for road in self.outgoing_roads:
-            if road.direction == direction:
-                return road
-        return None
+    def _waiting_vehicles(self, direction):
+        """Slow vehicles in the last 30% of the incoming road from this direction."""
+        road = self.get_incoming_by_direction(direction)
+        if road is None or road.length <= 0:
+            return []
+        return [v for v in road.vehicles
+                if v.position_on_road / road.length > 0.7 and v.speed < 5]
 
     def get_queue_length(self, direction):
-        """Count vehicles waiting near the end of the incoming road from this direction."""
-        road = self.get_incoming_by_direction(direction)
-        if road is None:
-            return 0
-        count = 0
-        for v in road.vehicles:
-            fraction = v.position_on_road / road.length if road.length > 0 else 0
-            if fraction > 0.7 and v.speed < 5:
-                count += 1
-        return count
+        """Count vehicles queued at the intersection from this direction."""
+        return len(self._waiting_vehicles(direction))
 
     def get_average_wait_time(self, direction):
-        """Average wait time of vehicles near end of incoming road from this direction."""
-        road = self.get_incoming_by_direction(direction)
-        if road is None:
-            return 0.0
-        waiting = [v for v in road.vehicles
-                    if (v.position_on_road / road.length if road.length > 0 else 0) > 0.7
-                    and v.speed < 5]
+        """Average wait time of vehicles queued from this direction."""
+        waiting = self._waiting_vehicles(direction)
         if not waiting:
             return 0.0
         return sum(v.wait_time for v in waiting) / len(waiting)

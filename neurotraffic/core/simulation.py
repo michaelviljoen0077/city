@@ -30,10 +30,7 @@ class World:
             road.vehicles.clear()
         # Reset traffic lights
         for tl in self.city_map.get_traffic_lights():
-            tl.phase = "NS_GREEN"
-            tl.phase_index = 0
-            tl.time_in_phase = 0.0
-            tl.switch_count = 0
+            tl.reset()
         self.vehicles.clear()
         self.completed_vehicles.clear()
         self.metrics.reset()
